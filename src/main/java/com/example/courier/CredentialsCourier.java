@@ -5,7 +5,6 @@ import org.apache.commons.lang3.RandomStringUtils;
 import java.util.ArrayList;
 import static io.restassured.RestAssured.given;
 
-
 public class CredentialsCourier {
 
     ArrayList<String> credentials = registerNewCourierAndReturnLoginPassword();

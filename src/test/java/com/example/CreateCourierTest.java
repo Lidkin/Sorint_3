@@ -1,29 +1,29 @@
 package com.example;
 
 import com.example.courier.Courier;
+import com.example.courier.CourierClient;
 import com.example.courier.CourierId;
+import groovyjarjarantlr4.v4.runtime.misc.NotNull;
 import io.qameta.allure.Description;
-import io.qameta.allure.Step;
 import io.qameta.allure.junit4.DisplayName;
-import io.restassured.RestAssured;
 import io.restassured.response.Response;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
-
 import java.util.ArrayList;
-
-import static io.restassured.RestAssured.*;
-
+import static org.junit.Assert.assertEquals;
 
 public class CreateCourierTest {
 
-    String courierLogin = RandomStringUtils.randomAlphabetic(10);
-    String courierPassword = RandomStringUtils.randomAlphabetic(10);
-    String courierFirstName = RandomStringUtils.randomAlphabetic(10);
+    private final String courierLogin = RandomStringUtils.randomAlphabetic(10);
+    private final String courierPassword = RandomStringUtils.randomAlphabetic(10);
+    private final String courierFirstName = RandomStringUtils.randomAlphabetic(10);
+    final CourierId id = new CourierId(getLoginPass().get(0), getLoginPass().get(1));
+    final CourierClient posting = new CourierClient();
+    final CourierClient courierClient = new CourierClient();
 
-    public ArrayList<String> getLoginPass() {
+    @NotNull
+    private ArrayList<String> getLoginPass() {
         ArrayList<String> loginPass = new ArrayList<>();
         loginPass.add(courierLogin);
         loginPass.add(courierPassword);
@@ -39,71 +39,47 @@ public class CreateCourierTest {
             courierFirstName
     );
 
-    CourierId id = new CourierId(getLoginPass().get(0), getLoginPass().get(1));
-
-    private final BaseHttp baseHttp = new BaseHttp();
-
-    @Before
-    public void setUp() {
-        RestAssured.baseURI = "https://qa-scooter.praktikum-services.ru";
-    }
-
     @After
     public void cleanUp() {
         if (id.getCourierId() != 0)
-            baseHttp.doDeleteRequest(baseURI + "/api/v1/courier/" + id.getCourierId());
-    }
-
-    @Step("do POST to /api/v1/courier/")
-    public Response doPost(Object body) {
-        return baseHttp.doPostRequest(baseURI + "/api/v1/courier/", body);
-    }
-
-    @Step("do POST bad request to /api/v1/courier/ with empty password")
-    public Response doPostBadRequestPasswordEmpty() {
-        return baseHttp.doPostRequest(baseURI + "/api/v1/courier/", courierBody.setPassword(null));
-    }
-
-    @Step("do POST bad request to /api/v1/courier/ with empty login")
-    public Response doPostBadRequestLoginEmpty() {
-        return baseHttp.doPostRequest(baseURI + "/api/v1/courier/", courierBody.setLogin(null));
+            courierClient.doDelete(id.getCourierId());
     }
 
     @Description("code: 201. ok: true.")
     @DisplayName("register courier: positive flow")
     @Test
     public void registerCourierPositiveFlow() {
-        Response response = doPost(body);
+        Response response = posting.doPost(body);
         response.then().assertThat().statusCode(201);
-        System.out.println(response.getBody().asString());
+        assertEquals("true", response.getBody().path("ok").toString());
     }
 
     @Description("code: 400, message: Недостаточно данных для создания учетной записи")
     @DisplayName("register courier: login empty")
     @Test
     public void registerCourierLoginEmpty() {
-        Response response = doPostBadRequestLoginEmpty();
+        Response response = posting.doPost(courierBody.setLogin(null));
         response.then().assertThat().statusCode(400);
-        System.out.println(response.getBody().asString());
+        assertEquals("Недостаточно данных для создания учетной записи", response.getBody().path("message").toString());
     }
 
     @Description("code: 400, message: Недостаточно данных для создания учетной записи")
     @DisplayName("register courier: password empty")
     @Test
     public void registerCourierPasswordEmpty() {
-        Response response = doPostBadRequestPasswordEmpty();
+        Response response = posting.doPost(courierBody.setPassword(null));
         response.then().assertThat().statusCode(400);
-        System.out.println(response.getBody().asString());
+        assertEquals("Недостаточно данных для создания учетной записи", response.getBody().path("message").toString());
     }
 
     @Description("code: 409, message: Этот логин уже используется. Попробуйте другой.")
     @DisplayName("register courier: recurring login")
     @Test
     public void registerCourierRecurringLogin() {
-        doPost(body);
-        Response response = doPost(courierBody);
+        posting.doPost(body);
+        Response response = posting.doPost(courierBody);
         response.then().assertThat().statusCode(409);
-        System.out.println(response.getBody().asString());
+        assertEquals("Этот логин уже используется. Попробуйте другой.", response.getBody().path("message").toString());
     }
 
 }

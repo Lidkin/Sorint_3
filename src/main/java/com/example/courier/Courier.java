@@ -12,30 +12,13 @@ public class Courier {
         this.firstName = firstName;
     }
 
-    public String getLogin() {
-        return login;
-    }
-
     public Object setLogin(String login) {
         this.login = login;
         return this;
-    }
-
-    public String getPassword() {
-        return password;
     }
 
     public Object setPassword(String password) {
         this.password = password;
         return this;
     }
-
-    public String getFirstName() {
-        return firstName;
-    }
-
-    public void setFirstName(String firstName) {
-        this.firstName = firstName;
-    }
-
 }

@@ -20,6 +20,12 @@ public class BaseHttp {
                 .get(uri);
     }
 
+    protected Response doGetRequestWithParam(String uri, Object orderTrack) {
+        return given().config(config)
+                .header("Content-Type", JSON)
+                .queryParam("t", orderTrack)
+                .get(uri);
+    }
     protected Response doPostRequest(String uri, Object body){
         return given().config(config)
                 .header("Content-Type", JSON)
